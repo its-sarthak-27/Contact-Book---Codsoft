@@ -1,0 +1,148 @@
+import tkinter as tk
+from tkinter import messagebox, simpledialog, ttk
+
+contacts = []
+
+
+def add_contact():
+    name = entry_name.get().strip()
+    phone = entry_phone.get().strip()
+    email = entry_email.get().strip()
+    address = entry_address.get().strip()
+
+    if not name or not phone:
+        messagebox.showerror("Error", "Name and Phone are required!")
+        return
+
+    contacts.append({"name": name, "phone": phone, "email": email, "address": address})
+    messagebox.showinfo("Success", f"Contact '{name}' added.")
+    clear_entries()
+    view_contacts()
+
+
+def view_contacts():
+    for row in tree.get_children():
+        tree.delete(row)
+    for idx, contact in enumerate(contacts):
+        tree.insert("", "end", iid=idx, values=(contact["name"], contact["phone"]))
+
+
+def search_contact():
+    query = simpledialog.askstring("Search", "Enter Name or Phone to search:")
+    if not query:
+        return
+
+    for row in tree.get_children():
+        tree.delete(row)
+
+    found = False
+    for idx, contact in enumerate(contacts):
+        if query.lower() in contact["name"].lower() or query in contact["phone"]:
+            tree.insert("", "end", iid=idx, values=(contact["name"], contact["phone"]))
+            found = True
+
+    if not found:
+        messagebox.showinfo("Not Found", "No contact matched your search.")
+
+
+def delete_contact():
+    selected = tree.selection()
+    if not selected:
+        messagebox.showwarning("Warning", "Please select a contact to delete.")
+        return
+
+    idx = int(selected[0])
+    name = contacts[idx]["name"]
+    if messagebox.askyesno("Confirm", f"Delete contact '{name}'?"):
+        contacts.pop(idx)
+        view_contacts()
+
+
+def update_contact():
+    selected = tree.selection()
+    if not selected:
+        messagebox.showwarning("Warning", "Please select a contact to update.")
+        return
+
+    idx = int(selected[0])
+    contact = contacts[idx]
+
+    new_name = simpledialog.askstring("Update", "Enter new name:", initialvalue=contact["name"])
+    new_phone = simpledialog.askstring("Update", "Enter new phone:", initialvalue=contact["phone"])
+    new_email = simpledialog.askstring("Update", "Enter new email:", initialvalue=contact["email"])
+    new_address = simpledialog.askstring("Update", "Enter new address:", initialvalue=contact["address"])
+
+    if not new_name or not new_phone:
+        messagebox.showerror("Error", "Name and Phone cannot be empty.")
+        return
+
+    contact.update({"name": new_name, "phone": new_phone, "email": new_email, "address": new_address})
+    view_contacts()
+
+
+def clear_entries():
+    entry_name.delete(0, tk.END)
+    entry_phone.delete(0, tk.END)
+    entry_email.delete(0, tk.END)
+    entry_address.delete(0, tk.END)
+
+
+root = tk.Tk()
+root.title("📇 Contact Manager")
+root.geometry("700x600")
+root.config(bg="#e0e5ec")
+
+title_label = tk.Label(root, text="📇 Contact Manager", bg="#e0e5ec", fg="#2f4f4f",
+                       font=("Helvetica", 20, "bold"))
+title_label.pack(pady=15)
+
+frame_form = tk.Frame(root, bg="#e0e5ec")
+frame_form.pack(pady=10)
+
+style_entry = {"width": 30, "font": ("Helvetica", 11), "bg": "#f0f4f8", "fg": "#333", "relief": "flat"}
+
+tk.Label(frame_form, text="Name:", bg="#e0e5ec", fg="#444", font=("Helvetica", 11)).grid(row=0, column=0, padx=5, pady=5, sticky="e")
+entry_name = tk.Entry(frame_form, **style_entry)
+entry_name.grid(row=0, column=1, padx=5, pady=5)
+
+tk.Label(frame_form, text="Phone:", bg="#e0e5ec", fg="#444", font=("Helvetica", 11)).grid(row=1, column=0, padx=5, pady=5, sticky="e")
+entry_phone = tk.Entry(frame_form, **style_entry)
+entry_phone.grid(row=1, column=1, padx=5, pady=5)
+
+tk.Label(frame_form, text="Email:", bg="#e0e5ec", fg="#444", font=("Helvetica", 11)).grid(row=2, column=0, padx=5, pady=5, sticky="e")
+entry_email = tk.Entry(frame_form, **style_entry)
+entry_email.grid(row=2, column=1, padx=5, pady=5)
+
+tk.Label(frame_form, text="Address:", bg="#e0e5ec", fg="#444", font=("Helvetica", 11)).grid(row=3, column=0, padx=5, pady=5, sticky="e")
+entry_address = tk.Entry(frame_form, **style_entry)
+entry_address.grid(row=3, column=1, padx=5, pady=5)
+
+tk.Button(root, text="➕ Add Contact", bg="#4caf50", fg="white", font=("Helvetica", 11, "bold"),
+          relief="flat", padx=10, pady=3, command=add_contact).pack(pady=10)
+
+columns = ("Name", "Phone")
+style = ttk.Style()
+style.configure("Treeview.Heading", font=("Helvetica", 11, "bold"))
+style.configure("Treeview", font=("Helvetica", 11), rowheight=25)
+
+tree = ttk.Treeview(root, columns=columns, show="headings", height=8)
+tree.heading("Name", text="Name")
+tree.heading("Phone", text="Phone")
+
+
+tree.column("Name", anchor=tk.W, width=250)
+tree.column("Phone", anchor=tk.CENTER, width=150)
+
+tree.pack(pady=10)
+
+frame_actions = tk.Frame(root, bg="#e0e5ec")
+frame_actions.pack(pady=10)
+
+btn_style = {"font": ("Helvetica", 11, "bold"), "relief": "flat", "padx": 8, "pady": 4}
+
+tk.Button(frame_actions, text="👀 View All", bg="#2196f3", fg="white", **btn_style, command=view_contacts).grid(row=0, column=0, padx=8)
+tk.Button(frame_actions, text="🔍 Search", bg="#673ab7", fg="white", **btn_style, command=search_contact).grid(row=0, column=1, padx=8)
+tk.Button(frame_actions, text="✏️ Update", bg="#ff9800", fg="white", **btn_style, command=update_contact).grid(row=0, column=2, padx=8)
+tk.Button(frame_actions, text="🗑️ Delete", bg="#f44336", fg="white", **btn_style, command=delete_contact).grid(row=0, column=3, padx=8)
+
+root.mainloop()
