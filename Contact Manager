@@ -88,7 +88,7 @@ def clear_entries():
 
 
 root = tk.Tk()
-root.title("📇 Contact Manager")
+root.title("📇 Contact Book")
 root.geometry("700x600")
 root.config(bg="#e0e5ec")
 
